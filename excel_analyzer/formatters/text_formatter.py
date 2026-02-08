@@ -135,6 +135,45 @@ class TextFormatter(BaseFormatter):
                     output_lines.append(f"... and {len(ws.cells) - 100} more cells")
                     output_lines.append("")
 
+            # Cell Formatting (colors, fonts)
+            cells_with_formatting = []
+            for cell in ws.cells:
+                if not cell.formatting:
+                    continue
+
+                formatting_details = []
+
+                # Check font color
+                if cell.formatting.font and cell.formatting.font.color:
+                    color = cell.formatting.font.color
+                    if color.value and color.value not in ['#000000', None]:
+                        formatting_details.append(f"Font Color: {color.value}")
+
+                # Check background color
+                if cell.formatting.fill and cell.formatting.fill.fg_color:
+                    if cell.formatting.fill.pattern_type != 'none':
+                        color = cell.formatting.fill.fg_color
+                        if color.value and color.value not in ['#000000', '#FFFFFF', None]:
+                            formatting_details.append(f"Background: {color.value}")
+
+                # Check bold/italic
+                if cell.formatting.font:
+                    if cell.formatting.font.bold:
+                        formatting_details.append("Bold")
+                    if cell.formatting.font.italic:
+                        formatting_details.append("Italic")
+
+                if formatting_details:
+                    cells_with_formatting.append((cell.coordinate, ', '.join(formatting_details)))
+
+            if cells_with_formatting:
+                output_lines.append(f"Cell Formatting ({len(cells_with_formatting)} cells with custom formatting):")
+                for coord, details in cells_with_formatting[:50]:
+                    output_lines.append(f"  {coord}: {details}")
+                if len(cells_with_formatting) > 50:
+                    output_lines.append(f"  ... and {len(cells_with_formatting) - 50} more cells")
+                output_lines.append("")
+
             # Data validations
             if ws.data_validations:
                 output_lines.append(f"Data Validations ({len(ws.data_validations)}):")

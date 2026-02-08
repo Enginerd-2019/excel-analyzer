@@ -318,16 +318,37 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                             <th>Value</th>
                             <th>Formula</th>
                             <th>Format</th>
+                            <th>Colors</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for cell in ws.cells[:100] %}
+                        {% set bg_color = '' %}
+                        {% set font_color = '' %}
+                        {% if cell.formatting %}
+                            {% if cell.formatting.fill and cell.formatting.fill.fg_color and cell.formatting.fill.pattern_type != 'none' %}
+                                {% if cell.formatting.fill.fg_color.value and cell.formatting.fill.fg_color.value not in ['#000000', '#FFFFFF'] %}
+                                    {% set bg_color = cell.formatting.fill.fg_color.value %}
+                                {% endif %}
+                            {% endif %}
+                            {% if cell.formatting.font and cell.formatting.font.color %}
+                                {% if cell.formatting.font.color.value and cell.formatting.font.color.value not in ['#000000'] %}
+                                    {% set font_color = cell.formatting.font.color.value %}
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
                         <tr>
                             <td><code>{{ cell.coordinate }}</code></td>
                             <td>{{ cell.data_type }}</td>
-                            <td>{{ cell.value | string | truncate(50) }}</td>
+                            <td {% if bg_color %}style="background-color: {{ bg_color }};"{% endif %} {% if font_color %}style="color: {{ font_color }}; {% if bg_color %}background-color: {{ bg_color }};{% endif %}"{% endif %}>{{ cell.value | string | truncate(50) }}</td>
                             <td>{% if cell.formula %}<code>{{ cell.formula | truncate(50) }}</code>{% endif %}</td>
                             <td>{{ cell.number_format }}</td>
+                            <td>
+                                {% if bg_color or font_color %}
+                                    {% if bg_color %}<div style="display: inline-block; width: 20px; height: 20px; background-color: {{ bg_color }}; border: 1px solid #ccc; vertical-align: middle; margin-right: 5px;" title="Background: {{ bg_color }}"></div>{% endif %}
+                                    {% if font_color %}<div style="display: inline-block; width: 20px; height: 20px; background-color: {{ font_color }}; border: 1px solid #ccc; vertical-align: middle;" title="Font: {{ font_color }}"></div>{% endif %}
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
